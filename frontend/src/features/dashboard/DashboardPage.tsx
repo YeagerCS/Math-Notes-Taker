@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { session } from '../../auth/session';
+import { FullscreenButton } from '../../components/FullscreenButton';
 import type { NotebookSummary } from '../../api/types';
 import { MoreIcon, PlusIcon } from '../../components/icons';
 import { NotebookCover } from './NotebookCover';
@@ -46,6 +47,7 @@ export function DashboardPage() {
           <h1 className="library__title">Library</h1>
         </div>
         <div className="library__actions">
+          <FullscreenButton className="icon-btn library__fullscreen" />
           <button className="btn btn--ghost" onClick={() => session.clear()}>
             Log out
           </button>

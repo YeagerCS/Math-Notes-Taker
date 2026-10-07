@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FullscreenButton } from '../../components/FullscreenButton';
 import {
   BackIcon,
   CloudAlertIcon,
@@ -126,6 +127,7 @@ export function Toolbar(props: Props) {
         <button className="icon-btn" aria-label="Zoom in" onClick={() => props.onZoomBy(1.25)}>
           <PlusIcon />
         </button>
+        <FullscreenButton className="icon-btn fullscreen-btn" />
         <span className={`save-status save-status--${props.saveStatus}`} title={statusLabel(props.saveStatus)}>
           {props.saveStatus === 'error' ? <CloudAlertIcon size={20} /> : <CloudCheckIcon size={20} />}
         </span>

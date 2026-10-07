@@ -161,7 +161,7 @@
 @media (max-width: 820px) {
   .toolbar__title,
   .zoom-label,
-  .toolbar__group--end .toolbar__divider ~ .icon-btn {
+  .toolbar__group--end .toolbar__divider ~ .icon-btn:not(.fullscreen-btn) {
     display: none;
   }
 }
@@ -268,4 +268,39 @@
 .add-page__plus {
   font-size: 22px;
   font-weight: 400;
+}
+
+/* ---- ?debug pen event log ---- */
+
+.pen-debug {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 50;
+  max-width: min(560px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(20, 18, 15, 0.85);
+  color: #e8f5d0;
+  font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+
+.pen-debug__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.pen-debug__head button {
+  pointer-events: auto;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 8px;
+  background: #fff3;
+  color: #fff;
+  font: inherit;
 }

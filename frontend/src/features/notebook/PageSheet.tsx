@@ -2,7 +2,7 @@ import { memo, useEffect, useLayoutEffect, useRef, useState, type RefObject } fr
 import type { Paper, Stroke } from '../../api/types';
 import { ERASER_RADIUS, MAX_CANVAS_PIXELS, PAGE_HEIGHT, PAGE_WIDTH } from './ink/constants';
 import { strokeHit } from './ink/geometry';
-import { isEraserInput, penState } from './ink/input';
+import { hasEraserButton, isEraserInput, penState } from './ink/input';
 import { paperStyle } from './ink/paper';
 import { drawPage, drawStroke } from './ink/render';
 import type { ToolSettings } from './tools';
@@ -146,8 +146,13 @@ export const PageSheet = memo(function PageSheet({
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    const s = session.current;
+    let s = session.current;
     if (!s || s.pointerId !== e.pointerId) return;
+    // Side button pressed after the pen touched down: drop the half-drawn stroke and erase instead.
+    if (s.kind === 'draw' && hasEraserButton(e)) {
+      s = { kind: 'erase', pointerId: e.pointerId, strokes, changed: false };
+      session.current = s;
+    }
     const events = e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent];
     let last = { x: 0, y: 0 };
     for (const ev of events.length ? events : [e.nativeEvent]) {

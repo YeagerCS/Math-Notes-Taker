@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { NotebookViewport, type ViewportHandle } from './NotebookViewport';
+import { PenDebug } from './PenDebug';
 import { Toolbar } from './Toolbar';
 import { loadPresets, savePresets, type ToolKind, type ToolPresets, type ToolSettings } from './tools';
 import { useNotebookEditor } from './useNotebookEditor';
 import './notebook.css';
+
+const showPenDebug = new URLSearchParams(location.search).has('debug');
 
 export function NotebookPage() {
   const { id } = useParams<{ id: string }>();
@@ -87,6 +90,7 @@ export function NotebookPage() {
         onAddPage={onAddPage}
         onDeletePage={onDeletePage}
       />
+      {showPenDebug && <PenDebug />}
     </div>
   );
 }
