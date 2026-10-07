@@ -1,0 +1,153 @@
+:root {
+  --bg: #f3efe6;
+  --bg-deep: #e8e2d5;
+  --surface: #fffdf8;
+  --ink: #1f1c18;
+  --ink-soft: #4a453d;
+  --muted: #8a8377;
+  --line: #e2dbcc;
+  --line-strong: #cfc6b4;
+  --accent: #2f55d4;
+  --accent-soft: #e4eafc;
+  --danger: #b4322a;
+
+  --font-ui: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+
+  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(40, 30, 10, 0.06), 0 1px 1px rgba(40, 30, 10, 0.04);
+  --shadow-md: 0 8px 24px -8px rgba(40, 30, 10, 0.18), 0 2px 6px rgba(40, 30, 10, 0.06);
+  --shadow-lg: 0 30px 60px -20px rgba(30, 20, 5, 0.35), 0 10px 20px -10px rgba(30, 20, 5, 0.2);
+
+  color-scheme: light;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn--primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fbf8f1;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primary:hover {
+  background: #36302a;
+}
+
+.btn--primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn--ghost:hover {
+  background: var(--bg-deep);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-soft);
+  transition: background 0.12s, color 0.12s;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--bg-deep);
+  color: var(--ink);
+}
+
+.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.icon-btn.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.icon-btn--sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.link-btn {
+  border: 0;
+  background: none;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.link-btn:hover {
+  color: var(--ink);
+}
+
+.link-btn--danger,
+.link-btn--danger:hover {
+  color: var(--danger);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

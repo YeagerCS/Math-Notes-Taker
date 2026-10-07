@@ -1,0 +1,16 @@
+# Already applied on the Pi. Exposes the fc26 Postgres StatefulSet on a stable ClusterIP
+# so Docker containers on the host can reach it (the original `postgres` service is headless).
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-shared
+  namespace: fc26
+  labels:
+    purpose: docker-access
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

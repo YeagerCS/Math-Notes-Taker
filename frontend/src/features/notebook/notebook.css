@@ -1,0 +1,271 @@
+.notebook {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #e6e1d6;
+}
+
+.notebook-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100dvh;
+  color: var(--muted);
+}
+
+/* ---- Toolbar ---- */
+
+.toolbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 60px;
+  padding: 0 10px;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(255, 253, 248, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 8px rgba(40, 30, 10, 0.05);
+  user-select: none;
+}
+
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar__group--start {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.toolbar__group--end {
+  flex: 1 1 0;
+  justify-content: flex-end;
+}
+
+.toolbar__tools {
+  flex: none;
+  gap: 6px;
+}
+
+.toolbar__title {
+  margin: 0 0 0 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 19px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar__divider {
+  width: 1px;
+  height: 24px;
+  margin: 0 6px;
+  background: var(--line);
+}
+
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 13px;
+  background: var(--bg);
+}
+
+.swatches,
+.sizes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transition: transform 0.1s;
+}
+
+.swatch.is-active {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 0 0 2.5px var(--surface),
+    0 0 0 4.5px var(--swatch);
+}
+
+.size-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.size-btn.is-active {
+  background: var(--bg-deep);
+}
+
+.size-btn__dot {
+  border-radius: 50%;
+}
+
+.zoom-label {
+  min-width: 52px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.zoom-label:hover {
+  background: var(--bg-deep);
+}
+
+.save-status {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  color: #3f8f5a;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+.save-status--saving {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.save-status--error {
+  color: var(--danger);
+}
+
+@media (max-width: 820px) {
+  .toolbar__title,
+  .zoom-label,
+  .toolbar__group--end .toolbar__divider ~ .icon-btn {
+    display: none;
+  }
+}
+
+/* ---- Pages ---- */
+
+.viewport {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  /* All finger gestures are handled in JS (pan, momentum, pinch) so the pen never scrolls. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.sheet-wrap {
+  position: relative;
+  flex: none;
+}
+
+.sheet {
+  position: relative;
+  background-color: #fff;
+  box-shadow:
+    0 1px 2px rgba(40, 30, 10, 0.08),
+    0 6px 24px -10px rgba(40, 30, 10, 0.25);
+  border-radius: 2px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sheet__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Sits inside the (zoom-scaled) gap below each sheet so layout stays linear in zoom. */
+.sheet-footer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: var(--gap);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.sheet-footer__num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.sheet-footer__delete {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.sheet-wrap:hover .sheet-footer__delete,
+.sheet-footer__delete:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .sheet-footer__delete {
+    opacity: 0.7;
+  }
+}
+
+.add-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 72px;
+  margin-bottom: 40px;
+  border: 1.5px dashed #c5bdac;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.add-page:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--ink-soft);
+}
+
+.add-page__plus {
+  font-size: 22px;
+  font-weight: 400;
+}
