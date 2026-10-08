@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client';
-import type { Notebook, Page, Stroke } from '../../api/types';
+import type { NewPageBackground, Notebook, Page, Stroke } from '../../api/types';
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
@@ -153,11 +153,37 @@ export function useNotebookEditor(notebookId: string) {
   const undo = useCallback(() => travel(undoStack, redoStack, 'before'), [travel]);
   const redo = useCallback(() => travel(redoStack, undoStack, 'after'), [travel]);
 
-  const addPage = useCallback(async () => {
-    const page = await api.addPage(notebookId);
-    setPages((prev) => [...prev, page]);
-    return page;
-  }, [notebookId]);
+  /** Adds a page at `position` (default: the end), optionally with a background image. */
+  const addPage = useCallback(
+    async (options: { position?: number; background?: NewPageBackground } = {}) => {
+      const page = await api.addPage(notebookId, options);
+      const next = pagesRef.current.slice();
+      next.splice(Math.min(page.position, next.length), 0, page);
+      pagesRef.current = next.map((p, i) => ({ ...p, position: i }));
+      setPages(pagesRef.current);
+      return page;
+    },
+    [notebookId],
+  );
+
+  /** Moves a page to another position. Applied locally right away; rolled back if the server refuses. */
+  const movePage = useCallback(async (pageId: string, toIndex: number) => {
+    const before = pagesRef.current;
+    const from = before.findIndex((p) => p.id === pageId);
+    const to = Math.max(0, Math.min(toIndex, before.length - 1));
+    if (from < 0 || from === to) return;
+    const next = before.slice();
+    next.splice(to, 0, ...next.splice(from, 1));
+    pagesRef.current = next.map((p, i) => ({ ...p, position: i }));
+    setPages(pagesRef.current);
+    try {
+      await api.movePage(pageId, to);
+    } catch (err) {
+      pagesRef.current = before;
+      setPages(before);
+      throw err;
+    }
+  }, []);
 
   const deletePage = useCallback(async (pageId: string) => {
     await api.deletePage(pageId);
@@ -178,6 +204,7 @@ export function useNotebookEditor(notebookId: string) {
     undo,
     redo,
     addPage,
+    movePage,
     deletePage,
   };
 }

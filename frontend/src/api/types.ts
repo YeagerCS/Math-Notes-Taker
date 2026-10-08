@@ -10,10 +10,22 @@ export interface Stroke {
   points: number[];
 }
 
+/** Size (px) of a page's background image, e.g. an imported PDF page. */
+export interface PageBackground {
+  width: number;
+  height: number;
+}
+
 export interface Page {
   id: string;
   position: number;
   strokes: Stroke[];
+  background?: PageBackground | null;
+}
+
+/** Background image to attach when creating a page. */
+export interface NewPageBackground extends PageBackground {
+  blob: Blob;
 }
 
 export interface NotebookSummary {

@@ -62,6 +62,11 @@ Reuses the Postgres 17 instance running in k3s (`fc26/postgres-0`) with its own 
 backend's env file is `~/mathnotes/.env`. Migrations are plain SQL files in `backend/migrations/`,
 applied in order on startup and tracked in `schema_migrations`.
 
+Imported PDF pages: the browser rasterises each chosen PDF page (pdf.js, 1800px wide JPEG) and uploads it as
+the page's background (`page_backgrounds`, one row per page, deleted with the page). The original PDF
+is not stored. `POST /api/notebooks/:id/pages?position=N&width=&height=` with an image body inserts such a
+page at position N; `GET /api/pages/:id/background` returns the image.
+
 ## Deployment
 
 All deploys are **manual**.

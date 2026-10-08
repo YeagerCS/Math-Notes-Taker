@@ -7,6 +7,7 @@ import {
   DownloadIcon,
   EraserIcon,
   HighlighterIcon,
+  ImportIcon,
   LassoIcon,
   LineIcon,
   MinusIcon,
@@ -35,6 +36,7 @@ interface Props {
   onZoomReset: () => void;
   exporting: boolean;
   onExport: () => void;
+  onImportPdf: () => void;
 }
 
 const TOOLS = [
@@ -134,6 +136,9 @@ export function Toolbar(props: Props) {
         </button>
         <button className="icon-btn zoom-btn" aria-label="Zoom in" onClick={() => props.onZoomBy(1.25)}>
           <PlusIcon />
+        </button>
+        <button className="icon-btn" aria-label="Import PDF pages" title="Import PDF pages" onClick={props.onImportPdf}>
+          <ImportIcon />
         </button>
         <button
           className="icon-btn"

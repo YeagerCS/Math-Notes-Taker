@@ -1,5 +1,6 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import type { Paper, Stroke } from '../../api/types';
+import type { PageBackground, Paper, Stroke } from '../../api/types';
+import { backgroundRect, useBackgroundUrl } from './backgrounds';
 import { ERASER_RADIUS, MAX_CANVAS_PIXELS, PAGE_HEIGHT, PAGE_WIDTH } from './ink/constants';
 import { polygonBounds, straightLinePoints, strokeHit, strokeInLasso, strokesBounds } from './ink/geometry';
 import { hasEraserButton, isEraserInput, penState } from './ink/input';
@@ -16,15 +17,21 @@ interface Props {
   pageId: string;
   index: number;
   strokes: Stroke[];
+  /** Imported PDF page shown under the ink, if any. */
+  background: PageBackground | null;
   paper: Paper;
   /** CSS px per page unit. */
   scale: number;
   toolRef: RefObject<ToolSettings>;
   canDelete: boolean;
+  /** Total pages in the notebook (for the reorder controls). */
+  pageCount: number;
   /** Ids of lassoed strokes on this page, or null when the selection is elsewhere / empty. */
   selectedIds: string[] | null;
   onCommit: (pageId: string, strokes: Stroke[]) => void;
   onDelete: (pageId: string) => void;
+  /** Reorder: move this page to the given 0-based index. */
+  onMove: (pageId: string, toIndex: number) => void;
   onSelect: (selection: Selection | null) => void;
   /** Selection dropped at an offset (page units, relative to this page — may land on another page). */
   onMoveSelection: (pageId: string, ids: string[], dx: number, dy: number) => void;
@@ -64,13 +71,16 @@ export const PageSheet = memo(function PageSheet({
   pageId,
   index,
   strokes,
+  background,
   paper,
   scale,
   toolRef,
   canDelete,
+  pageCount,
   selectedIds,
   onCommit,
   onDelete,
+  onMove,
   onSelect,
   onMoveSelection,
 }: Props) {
@@ -84,6 +94,9 @@ export const PageSheet = memo(function PageSheet({
   const scrollFrame = useRef(0);
   const [visible, setVisible] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const backgroundUrl = useBackgroundUrl(pageId, visible && background !== null);
+  const bgRect = background && backgroundRect(background);
 
   const pxPerUnit = backingScale(scale);
   const width = PAGE_WIDTH * scale;
@@ -386,6 +399,20 @@ export const PageSheet = memo(function PageSheet({
         onPointerCancel={endSession}
         onContextMenu={(e) => e.preventDefault()}
       >
+        {visible && bgRect && backgroundUrl && (
+          <img
+            className="sheet__background"
+            src={backgroundUrl}
+            alt=""
+            draggable={false}
+            style={{
+              left: bgRect.x * scale,
+              top: bgRect.y * scale,
+              width: bgRect.width * scale,
+              height: bgRect.height * scale,
+            }}
+          />
+        )}
         {(visible || bounds) && (
           <>
             <canvas
@@ -423,21 +450,63 @@ export const PageSheet = memo(function PageSheet({
       </div>
       <div className="sheet-footer">
         <span className="sheet-footer__num">{index + 1}</span>
-        {canDelete &&
-          (confirmDelete ? (
-            <span className="sheet-footer__confirm">
-              <button className="link-btn link-btn--danger" onClick={() => onDelete(pageId)}>
-                Delete page
-              </button>
-              <button className="link-btn" onClick={() => setConfirmDelete(false)}>
-                Keep
-              </button>
-            </span>
-          ) : (
-            <button className="link-btn sheet-footer__delete" onClick={() => setConfirmDelete(true)}>
-              Remove
-            </button>
-          ))}
+        {/* Only for pages near the screen: a notebook with many pages would otherwise render N×N options. */}
+        {visible && pageCount > 1 && (
+          <span className="sheet-footer__actions">
+            {confirmDelete ? (
+              <>
+                <button className="link-btn link-btn--danger" onClick={() => onDelete(pageId)}>
+                  Delete page
+                </button>
+                <button className="link-btn" onClick={() => setConfirmDelete(false)}>
+                  Keep
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="link-btn"
+                  aria-label="Move page up"
+                  title="Move page up"
+                  disabled={index === 0}
+                  onClick={() => onMove(pageId, index - 1)}
+                >
+                  ↑
+                </button>
+                <button
+                  className="link-btn"
+                  aria-label="Move page down"
+                  title="Move page down"
+                  disabled={index === pageCount - 1}
+                  onClick={() => onMove(pageId, index + 1)}
+                >
+                  ↓
+                </button>
+                <select
+                  className="link-btn sheet-footer__moveto"
+                  aria-label="Move page to position"
+                  value=""
+                  onChange={(e) => e.target.value !== '' && onMove(pageId, Number(e.target.value))}
+                >
+                  <option value="" disabled>
+                    Move to…
+                  </option>
+                  {Array.from({ length: pageCount }, (_, i) => (
+                    <option key={i} value={i} disabled={i === index}>
+                      Position {i + 1}
+                      {i === index ? ' (current)' : ''}
+                    </option>
+                  ))}
+                </select>
+                {canDelete && (
+                  <button className="link-btn" onClick={() => setConfirmDelete(true)}>
+                    Remove
+                  </button>
+                )}
+              </>
+            )}
+          </span>
+        )}
       </div>
     </div>
   );

@@ -19,6 +19,8 @@ import type { ToolSettings } from './tools';
 export interface ViewportHandle {
   zoomBy(factor: number): void;
   resetZoom(): void;
+  /** Index of the page under the middle of the screen. */
+  currentPageIndex(): number;
 }
 
 interface Props {
@@ -34,6 +36,7 @@ interface Props {
   onCommitChanges: (changes: { pageId: string; strokes: Stroke[] }[]) => void;
   onAddPage: () => void;
   onDeletePage: (pageId: string) => void;
+  onMovePage: (pageId: string, toIndex: number) => void;
 }
 
 /** Page width at zoom 1 is "fit to screen", capped for large displays. */
@@ -60,6 +63,7 @@ export function NotebookViewport({
   onCommitChanges,
   onAddPage,
   onDeletePage,
+  onMovePage,
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -138,6 +142,18 @@ export function NotebookViewport({
     resetZoom() {
       const el = viewportRef.current!;
       zoomAt(1, { x: el.clientWidth / 2, y: el.clientHeight / 2 });
+    },
+    currentPageIndex() {
+      const el = viewportRef.current!;
+      const rect = el.getBoundingClientRect();
+      const middle = rect.top + rect.height / 2;
+      const sheets = [...el.querySelectorAll('.sheet')];
+      // Last sheet that starts above the middle of the screen.
+      let index = 0;
+      sheets.forEach((sheet, i) => {
+        if (sheet.getBoundingClientRect().top <= middle) index = i;
+      });
+      return index;
     },
   }));
 
@@ -338,10 +354,13 @@ export function NotebookViewport({
             pageId={page.id}
             index={i}
             strokes={page.strokes}
+            background={page.background ?? null}
             paper={paper}
             scale={scale}
             toolRef={toolRef}
             canDelete={pages.length > 1}
+            pageCount={pages.length}
+            onMove={onMovePage}
             selectedIds={selection?.pageId === page.id ? selection.ids : null}
             onCommit={onCommit}
             onDelete={onDeletePage}

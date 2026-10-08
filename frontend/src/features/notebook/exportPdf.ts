@@ -1,5 +1,6 @@
 import type { jsPDF } from 'jspdf';
 import type { Page, Paper, Stroke } from '../../api/types';
+import { backgroundRect, loadBackgroundBlob } from './backgrounds';
 import { GRID_SPACING, LINE_SPACING, PAGE_HEIGHT, PAGE_WIDTH } from './ink/constants';
 import { HIGHLIGHTER_ALPHA, strokeOutline } from './ink/render';
 
@@ -69,7 +70,26 @@ function drawStroke(doc: jsPDF, stroke: Stroke) {
 export interface PdfSource {
   title: string;
   paper: Paper;
-  pages: Pick<Page, 'strokes'>[];
+  pages: Pick<Page, 'id' | 'strokes' | 'background'>[];
+}
+
+const IMAGE_FORMATS: Record<string, string> = { 'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WEBP' };
+
+/** Places an imported PDF page (stored as an image) where it sits on screen. */
+async function drawBackground(doc: jsPDF, page: Pick<Page, 'id' | 'background'>) {
+  if (!page.background) return;
+  const blob = await loadBackgroundBlob(page.id);
+  const rect = backgroundRect(page.background);
+  doc.addImage(
+    new Uint8Array(await blob.arrayBuffer()),
+    IMAGE_FORMATS[blob.type] ?? 'JPEG',
+    mm(rect.x),
+    mm(rect.y),
+    mm(rect.width),
+    mm(rect.height),
+    page.id, // alias: identical images are embedded once
+    'FAST',
+  );
 }
 
 export interface PdfOptions {
@@ -88,11 +108,13 @@ export async function buildNotebookPdf(source: PdfSource, { includePaper = true 
 
   // Skip blank pages at the end (a spare page is usually waiting there); blank pages in between stay.
   let pageCount = source.pages.length;
-  while (pageCount > 1 && source.pages[pageCount - 1].strokes.length === 0) pageCount--;
+  const isBlank = (p: PdfSource['pages'][number]) => p.strokes.length === 0 && !p.background;
+  while (pageCount > 1 && isBlank(source.pages[pageCount - 1])) pageCount--;
 
-  source.pages.slice(0, pageCount).forEach((page, index) => {
+  for (const [index, page] of source.pages.slice(0, pageCount).entries()) {
     if (index > 0) doc.addPage('a4', 'portrait');
     if (includePaper) drawPaper(doc, source.paper);
+    await drawBackground(doc, page);
 
     // Highlighters first so pen ink stays crisp on top, like on screen.
     const highlights = page.strokes.filter((s) => s.tool === 'highlighter');
@@ -102,7 +124,7 @@ export async function buildNotebookPdf(source: PdfSource, { includePaper = true 
       doc.setGState(opaque);
     }
     page.strokes.filter((s) => s.tool !== 'highlighter').forEach((s) => drawStroke(doc, s));
-  });
+  }
 
   return doc;
 }

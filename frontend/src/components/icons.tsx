@@ -120,3 +120,11 @@ export const DownloadIcon = (p: IconProps) => (
     <path d="M5 19.5h14" />
   </Icon>
 );
+
+export const ImportIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M13.5 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5z" />
+    <path d="M13.5 3.5v5h5" />
+    <path d="M12 11.5v6M9 14.5h6" />
+  </Icon>
+);

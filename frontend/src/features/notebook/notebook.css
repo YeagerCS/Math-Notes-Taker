@@ -158,7 +158,30 @@
   color: var(--danger);
 }
 
-@media (max-width: 820px) {
+/* Narrow screens (tablet in portrait): two rows — navigation/actions on top, drawing tools below. */
+@media (max-width: 900px) {
+  .toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    row-gap: 0;
+    padding-top: calc(6px + env(safe-area-inset-top));
+  }
+
+  .toolbar__group--start,
+  .toolbar__group--end {
+    flex: 1 1 auto;
+  }
+
+  .toolbar__tools {
+    order: 3;
+    flex: 1 0 100%;
+    justify-content: safe center; /* stays reachable when it has to scroll */
+    padding: 4px 0 8px;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 560px) {
   .toolbar__title,
   .zoom-label,
   .zoom-btn {
@@ -230,20 +253,33 @@
   font-weight: 600;
 }
 
-.sheet-footer__delete {
+.sheet-footer__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   opacity: 0;
   transition: opacity 0.15s;
 }
 
-.sheet-wrap:hover .sheet-footer__delete,
-.sheet-footer__delete:focus-visible {
+.sheet-wrap:hover .sheet-footer__actions,
+.sheet-footer__actions:focus-within {
   opacity: 1;
 }
 
 @media (hover: none) {
-  .sheet-footer__delete {
-    opacity: 0.7;
+  .sheet-footer__actions {
+    opacity: 0.75;
   }
+}
+
+.sheet-footer__actions .link-btn:disabled {
+  opacity: 0.3;
+}
+
+.sheet-footer__moveto {
+  appearance: none;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .add-page {
@@ -328,4 +364,143 @@
 
 .sheet__canvas--live {
   pointer-events: none;
+}
+
+/* ---- Imported PDF page under the ink ---- */
+
+.sheet__background {
+  position: absolute;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* ---- Import PDF dialog ---- */
+
+.import-dialog {
+  width: min(860px, calc(100vw - 32px));
+}
+
+.import-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: min(86vh, 900px);
+  padding: 28px;
+}
+
+.import-dialog__file {
+  align-self: flex-start;
+  cursor: pointer;
+}
+
+.import-dialog__file.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.import-dialog__filename {
+  margin-top: -8px;
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-dialog__controls {
+  display: grid;
+  grid-template-columns: 1fr minmax(180px, 240px);
+  gap: 16px;
+}
+
+.import-dialog__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.import-dialog__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 14px;
+  min-height: 160px;
+  padding: 14px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.pdf-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  opacity: 0.45;
+  transition: opacity 0.12s;
+}
+
+.pdf-thumb.is-selected {
+  opacity: 1;
+}
+
+.pdf-thumb__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 0.707;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  overflow: hidden;
+}
+
+.pdf-thumb.is-selected .pdf-thumb__image {
+  outline-color: var(--accent);
+}
+
+.pdf-thumb__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top;
+}
+
+.pdf-thumb__num {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 560px) {
+  .import-dialog__controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Comfortable pen/finger targets for the per-page controls. */
+.sheet-footer__actions .link-btn {
+  min-width: 34px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 12.5px;
+}
+
+.sheet-footer__actions button.link-btn[aria-label^='Move page'] {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.sheet-footer__actions .link-btn:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.06);
 }

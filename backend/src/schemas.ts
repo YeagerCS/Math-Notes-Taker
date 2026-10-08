@@ -29,6 +29,25 @@ export const updateNotebookBody = {
   properties: notebookFields,
 } as const;
 
+export const movePageBody = {
+  type: 'object',
+  required: ['position'],
+  additionalProperties: false,
+  properties: { position: { type: 'integer', minimum: 0 } },
+} as const;
+
+export const BACKGROUND_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+export const createPageQuery = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    position: { type: 'integer', minimum: 0 },
+    width: { type: 'integer', minimum: 1, maximum: 20000 },
+    height: { type: 'integer', minimum: 1, maximum: 20000 },
+  },
+} as const;
+
 const stroke = {
   type: 'object',
   required: ['id', 'tool', 'color', 'size', 'points'],
