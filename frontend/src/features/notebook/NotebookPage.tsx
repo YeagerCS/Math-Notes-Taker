@@ -31,6 +31,19 @@ export function NotebookPage() {
 
   const { undo, redo, addPage, deletePage } = editor;
 
+  const [exporting, setExporting] = useState(false);
+  const exportPdf = async () => {
+    if (!editor.notebook || exporting) return;
+    setExporting(true);
+    try {
+      // Loaded on demand so the PDF library isn't part of the initial bundle.
+      const { downloadNotebookPdf } = await import('./exportPdf');
+      await downloadNotebookPdf({ title: editor.notebook.title, paper: editor.notebook.paper, pages: editor.pages });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -79,6 +92,8 @@ export function NotebookPage() {
         onRedo={redo}
         onZoomBy={(f) => viewport.current?.zoomBy(f)}
         onZoomReset={() => viewport.current?.resetZoom()}
+        exporting={exporting}
+        onExport={() => void exportPdf()}
       />
       <NotebookViewport
         ref={viewport}

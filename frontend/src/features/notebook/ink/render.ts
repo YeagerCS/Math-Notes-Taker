@@ -23,9 +23,13 @@ function outlineToPath(outline: number[][]): Path2D {
   return path;
 }
 
-function buildPath(stroke: Stroke, complete: boolean): Path2D {
+/**
+ * Outline polygon of a stroke in page units. Consecutive points are meant to be joined with
+ * quadratic curves through their midpoints (see outlineToPath); the PDF export does the same.
+ */
+export function strokeOutline(stroke: Stroke, complete = true): number[][] {
   const isHighlighter = stroke.tool === 'highlighter';
-  const outline = getStroke(toTriples(stroke.points), {
+  return getStroke(toTriples(stroke.points), {
     size: stroke.size,
     thinning: isHighlighter ? 0 : 0.6,
     smoothing: 0.55,
@@ -35,8 +39,14 @@ function buildPath(stroke: Stroke, complete: boolean): Path2D {
     start: { cap: true },
     end: { cap: true },
   });
-  return outlineToPath(outline);
 }
+
+function buildPath(stroke: Stroke, complete: boolean): Path2D {
+  return outlineToPath(strokeOutline(stroke, complete));
+}
+
+/** Opacity used for highlighter ink (screen and PDF). */
+export const HIGHLIGHTER_ALPHA = 0.38;
 
 /** Path in page units. Completed strokes are cached; pass complete=false for a stroke in progress. */
 export function strokePath(stroke: Stroke, complete = true): Path2D {
@@ -51,7 +61,7 @@ export function strokePath(stroke: Stroke, complete = true): Path2D {
 
 export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke, complete = true) {
   ctx.fillStyle = stroke.color;
-  ctx.globalAlpha = stroke.tool === 'highlighter' ? 0.38 : 1;
+  ctx.globalAlpha = stroke.tool === 'highlighter' ? HIGHLIGHTER_ALPHA : 1;
   ctx.globalCompositeOperation = stroke.tool === 'highlighter' ? 'multiply' : 'source-over';
   ctx.fill(strokePath(stroke, complete));
   ctx.globalAlpha = 1;

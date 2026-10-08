@@ -4,6 +4,7 @@ import {
   BackIcon,
   CloudAlertIcon,
   CloudCheckIcon,
+  DownloadIcon,
   EraserIcon,
   HighlighterIcon,
   LassoIcon,
@@ -32,6 +33,8 @@ interface Props {
   onRedo: () => void;
   onZoomBy: (factor: number) => void;
   onZoomReset: () => void;
+  exporting: boolean;
+  onExport: () => void;
 }
 
 const TOOLS = [
@@ -123,16 +126,25 @@ export function Toolbar(props: Props) {
           <RedoIcon />
         </button>
         <span className="toolbar__divider" />
-        <button className="icon-btn" aria-label="Zoom out" onClick={() => props.onZoomBy(1 / 1.25)}>
+        <button className="icon-btn zoom-btn" aria-label="Zoom out" onClick={() => props.onZoomBy(1 / 1.25)}>
           <MinusIcon />
         </button>
         <button className="zoom-label" onClick={props.onZoomReset} title="Reset zoom">
           {Math.round(props.zoom * 100)}%
         </button>
-        <button className="icon-btn" aria-label="Zoom in" onClick={() => props.onZoomBy(1.25)}>
+        <button className="icon-btn zoom-btn" aria-label="Zoom in" onClick={() => props.onZoomBy(1.25)}>
           <PlusIcon />
         </button>
-        <FullscreenButton className="icon-btn fullscreen-btn" />
+        <button
+          className="icon-btn"
+          aria-label="Export as PDF"
+          title="Export as PDF"
+          disabled={props.exporting}
+          onClick={props.onExport}
+        >
+          <DownloadIcon />
+        </button>
+        <FullscreenButton />
         <span className={`save-status save-status--${props.saveStatus}`} title={statusLabel(props.saveStatus)}>
           {props.saveStatus === 'error' ? <CloudAlertIcon size={20} /> : <CloudCheckIcon size={20} />}
         </span>

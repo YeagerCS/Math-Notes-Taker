@@ -112,3 +112,11 @@ export const LineIcon = (p: IconProps) => (
     <circle cx="19" cy="5" r="1.8" />
   </Icon>
 );
+
+export const DownloadIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 4v11" />
+    <path d="M7.5 11l4.5 4.5 4.5-4.5" />
+    <path d="M5 19.5h14" />
+  </Icon>
+);

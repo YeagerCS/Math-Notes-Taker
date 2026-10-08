@@ -161,7 +161,7 @@
 @media (max-width: 820px) {
   .toolbar__title,
   .zoom-label,
-  .toolbar__group--end .toolbar__divider ~ .icon-btn:not(.fullscreen-btn) {
+  .zoom-btn {
     display: none;
   }
 }

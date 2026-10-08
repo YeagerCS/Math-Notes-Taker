@@ -33,6 +33,23 @@ export function DashboardPage() {
     return () => window.removeEventListener('pointerdown', close);
   }, [menuFor]);
 
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const exportPdf = async (nb: NotebookSummary) => {
+    setExportingId(nb.id);
+    try {
+      const [notebook, { downloadNotebookPdf }] = await Promise.all([
+        api.getNotebook(nb.id),
+        import('../notebook/exportPdf'),
+      ]);
+      await downloadNotebookPdf(notebook);
+      setMenuFor(null);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setExportingId(null);
+    }
+  };
+
   const remove = async (id: string) => {
     await api.deleteNotebook(id);
     setNotebooks((prev) => prev?.filter((n) => n.id !== id) ?? null);
@@ -104,6 +121,9 @@ export function DashboardPage() {
                         }}
                       >
                         Edit cover &amp; title
+                      </button>
+                      <button role="menuitem" disabled={exportingId === nb.id} onClick={() => void exportPdf(nb)}>
+                        {exportingId === nb.id ? 'Exporting…' : 'Export as PDF'}
                       </button>
                       {confirmDelete === nb.id ? (
                         <button role="menuitem" className="is-danger" onClick={() => void remove(nb.id)}>
