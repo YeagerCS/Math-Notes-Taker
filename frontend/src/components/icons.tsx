@@ -97,3 +97,18 @@ export const CloudAlertIcon = (p: IconProps) => (
     <path d="M12 10.5v3M12 15.8v.1" />
   </Icon>
 );
+
+export const LassoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <ellipse cx="12" cy="10" rx="8.5" ry="6" strokeDasharray="3.2 2.8" />
+    <path d="M7.5 15.2c-1.2 1-1.6 2.6-.4 3.5 1.3 1 3-.2 2.4-1.6-.5-1.2-2.3-1-3 .2-.6 1.1-.3 2.4.3 3.4" />
+  </Icon>
+);
+
+export const LineIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6.5 17.5l11-11" />
+    <circle cx="5" cy="19" r="1.8" />
+    <circle cx="19" cy="5" r="1.8" />
+  </Icon>
+);

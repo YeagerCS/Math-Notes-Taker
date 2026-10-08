@@ -2,7 +2,7 @@ import { session } from '../auth/session';
 import type { Notebook, NotebookInput, NotebookSummary, Page, Stroke } from './types';
 
 // Default: API on port 3000 of whatever host served the page (works for localhost and LAN devices).
-// In the Docker image it's built as "" (same origin, nginx proxies /api).
+// In production VITE_API_URL is set at build time (https://api.malisi.ch).
 const API_URL = (import.meta.env.VITE_API_URL ?? `${location.protocol}//${location.hostname}:3000`).replace(/\/$/, '');
 
 export class ApiError extends Error {

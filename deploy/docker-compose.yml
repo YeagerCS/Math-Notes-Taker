@@ -1,34 +1,21 @@
 # Runs on the Raspberry Pi. Postgres is the existing instance in k3s (namespace fc26),
 # reached through the ClusterIP service `postgres-shared` (see deploy/k8s/postgres-shared.yaml).
-x-logging: &logging
-  driver: json-file
-  options: { max-size: 10m, max-file: '3' }
-
+# The frontend is NOT hosted here — it lives on GitHub Pages (https://notes.malisi.ch).
 services:
   api:
     image: mathnotes-api:latest
     container_name: mathnotes-api
     restart: unless-stopped
     env_file: ${MATHNOTES_ENV_FILE:-/home/silv/mathnotes/.env}
-    logging: *logging
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
     ports:
       - "3100:3000"
     networks: [default, proxy]
 
-  # The full app (static frontend + /api proxy) on one port: http://<pi>:8092
-  # (8090 is taken by k3s Traefik.)
-  web:
-    image: mathnotes-web:latest
-    container_name: mathnotes-web
-    restart: unless-stopped
-    depends_on: [api]
-    logging: *logging
-    ports:
-      - "8092:80"
-    networks: [default, proxy]
-
 networks:
-  # Lets Nginx Proxy Manager forward to mathnotes-web:80 / mathnotes-api:3000
+  # Lets Nginx Proxy Manager forward https://api.malisi.ch to mathnotes-api:3000
   proxy:
     name: nginxnpm_default
     external: true

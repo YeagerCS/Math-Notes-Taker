@@ -304,3 +304,28 @@
   color: #fff;
   font: inherit;
 }
+
+/* ---- Lasso selection ---- */
+
+.sheet-wrap.has-selection {
+  z-index: 3; /* dragged ink may overlap neighbouring pages */
+}
+
+.selection {
+  position: absolute;
+  border: 1.5px dashed var(--accent);
+  border-radius: 6px;
+  background: rgba(47, 85, 212, 0.05);
+  cursor: move;
+  will-change: transform;
+}
+
+.selection canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sheet__canvas--live {
+  pointer-events: none;
+}

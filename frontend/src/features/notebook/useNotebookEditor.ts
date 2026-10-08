@@ -4,11 +4,8 @@ import type { Notebook, Page, Stroke } from '../../api/types';
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
-interface HistoryEntry {
-  pageId: string;
-  before: Stroke[];
-  after: Stroke[];
-}
+/** One undo step: the before/after strokes of every page it touched. */
+type HistoryEntry = { pageId: string; before: Stroke[]; after: Stroke[] }[];
 
 const SAVE_DEBOUNCE_MS = 700;
 const RETRY_MS = 3000;
@@ -99,12 +96,14 @@ export function useNotebookEditor(notebookId: string) {
     };
   }, [flush]);
 
-  const replaceStrokes = useCallback(
-    (pageId: string, strokes: Stroke[]) => {
-      const next = pagesRef.current.map((p) => (p.id === pageId ? { ...p, strokes } : p));
+  /** Replaces the strokes of one or more pages (no history entry). */
+  const applyStrokes = useCallback(
+    (changes: { pageId: string; strokes: Stroke[] }[]) => {
+      const byId = new Map(changes.map((c) => [c.pageId, c.strokes]));
+      const next = pagesRef.current.map((p) => (byId.has(p.id) ? { ...p, strokes: byId.get(p.id)! } : p));
       pagesRef.current = next;
       setPages(next);
-      markDirty(pageId);
+      changes.forEach((c) => markDirty(c.pageId));
     },
     [markDirty],
   );
@@ -112,32 +111,43 @@ export function useNotebookEditor(notebookId: string) {
   const syncHistoryState = () =>
     setHistoryState({ canUndo: undoStack.current.length > 0, canRedo: redoStack.current.length > 0 });
 
-  /** Records a user edit of one page. */
-  const commitStrokes = useCallback(
-    (pageId: string, strokes: Stroke[]) => {
-      const before = pagesRef.current.find((p) => p.id === pageId)?.strokes ?? [];
-      undoStack.current.push({ pageId, before, after: strokes });
+  /** Records a user edit as one undo step; it may span several pages (e.g. moving ink to another page). */
+  const commitChanges = useCallback(
+    (changes: { pageId: string; strokes: Stroke[] }[]) => {
+      undoStack.current.push(
+        changes.map((c) => ({
+          pageId: c.pageId,
+          before: pagesRef.current.find((p) => p.id === c.pageId)?.strokes ?? [],
+          after: c.strokes,
+        })),
+      );
       if (undoStack.current.length > HISTORY_LIMIT) undoStack.current.shift();
       redoStack.current = [];
       syncHistoryState();
-      replaceStrokes(pageId, strokes);
+      applyStrokes(changes);
     },
-    [replaceStrokes],
+    [applyStrokes],
+  );
+
+  const commitStrokes = useCallback(
+    (pageId: string, strokes: Stroke[]) => commitChanges([{ pageId, strokes }]),
+    [commitChanges],
   );
 
   const travel = useCallback(
     (from: typeof undoStack, to: typeof undoStack, pick: 'before' | 'after') => {
-      // Skip entries whose page was deleted meanwhile.
+      // Skip entries that only touch pages deleted meanwhile.
+      const exists = (pageId: string) => pagesRef.current.some((p) => p.id === pageId);
       let entry: HistoryEntry | undefined;
       while ((entry = from.current.pop())) {
-        if (pagesRef.current.some((p) => p.id === entry!.pageId)) break;
+        if (entry.some((c) => exists(c.pageId))) break;
       }
       if (!entry) return syncHistoryState();
       to.current.push(entry);
       syncHistoryState();
-      replaceStrokes(entry.pageId, entry[pick]);
+      applyStrokes(entry.filter((c) => exists(c.pageId)).map((c) => ({ pageId: c.pageId, strokes: c[pick] })));
     },
-    [replaceStrokes],
+    [applyStrokes],
   );
 
   const undo = useCallback(() => travel(undoStack, redoStack, 'before'), [travel]);
@@ -164,6 +174,7 @@ export function useNotebookEditor(notebookId: string) {
     saveStatus,
     ...historyState,
     commitStrokes,
+    commitChanges,
     undo,
     redo,
     addPage,

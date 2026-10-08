@@ -6,6 +6,8 @@ import {
   CloudCheckIcon,
   EraserIcon,
   HighlighterIcon,
+  LassoIcon,
+  LineIcon,
   MinusIcon,
   PenIcon,
   PlusIcon,
@@ -34,13 +36,16 @@ interface Props {
 
 const TOOLS = [
   { id: 'pen', label: 'Pen', Icon: PenIcon },
+  { id: 'line', label: 'Straight line (snaps to horizontal / vertical)', Icon: LineIcon },
   { id: 'highlighter', label: 'Highlighter', Icon: HighlighterIcon },
   { id: 'eraser', label: 'Eraser (or hold the S Pen button)', Icon: EraserIcon },
+  { id: 'lasso', label: 'Lasso: circle ink, then drag it (also onto another page)', Icon: LassoIcon },
 ] as const;
 
 export function Toolbar(props: Props) {
   const { tool, presets } = props;
-  const inkTool = tool === 'eraser' ? null : tool;
+  // The line tool shares the pen's colour and thickness.
+  const inkTool = tool === 'highlighter' ? 'highlighter' : tool === 'pen' || tool === 'line' ? 'pen' : null;
   const colors = inkTool === 'highlighter' ? HIGHLIGHTER_COLORS : PEN_COLORS;
   const sizes = inkTool === 'highlighter' ? HIGHLIGHTER_SIZES : PEN_SIZES;
   const active = inkTool ? presets[inkTool] : null;

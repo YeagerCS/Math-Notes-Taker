@@ -10,9 +10,10 @@ import {
   type RefObject,
 } from 'react';
 import type { Page, Paper, Stroke } from '../../api/types';
-import { MAX_ZOOM, MIN_ZOOM, PAGE_WIDTH } from './ink/constants';
+import { MAX_ZOOM, MIN_ZOOM, PAGE_HEIGHT, PAGE_WIDTH } from './ink/constants';
+import { strokesBounds, translateStroke } from './ink/geometry';
 import { penState } from './ink/input';
-import { PageSheet } from './PageSheet';
+import { PageSheet, type Selection } from './PageSheet';
 import type { ToolSettings } from './tools';
 
 export interface ViewportHandle {
@@ -26,7 +27,11 @@ interface Props {
   paper: Paper;
   toolRef: RefObject<ToolSettings>;
   onZoomChange: (zoom: number) => void;
+  /** True while the lasso tool is active; switching tools drops the selection. */
+  lassoActive: boolean;
   onCommit: (pageId: string, strokes: Stroke[]) => void;
+  /** One undo step touching several pages. */
+  onCommitChanges: (changes: { pageId: string; strokes: Stroke[] }[]) => void;
   onAddPage: () => void;
   onDeletePage: (pageId: string) => void;
 }
@@ -50,7 +55,9 @@ export function NotebookViewport({
   paper,
   toolRef,
   onZoomChange,
+  lassoActive,
   onCommit,
+  onCommitChanges,
   onAddPage,
   onDeletePage,
 }: Props) {
@@ -133,6 +140,57 @@ export function NotebookViewport({
       zoomAt(1, { x: el.clientWidth / 2, y: el.clientHeight / 2 });
     },
   }));
+
+  // ---- Lasso selection (lives here because a move can end on another page) ----
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const pagesRef = useRef(pages);
+  pagesRef.current = pages;
+  const viewportWidthRef = useRef(viewportWidth);
+  viewportWidthRef.current = viewportWidth;
+
+  useEffect(() => {
+    if (!lassoActive) setSelection(null);
+  }, [lassoActive]);
+
+  const moveSelection = useCallback(
+    (pageId: string, ids: string[], dx: number, dy: number) => {
+      const all = pagesRef.current;
+      const sourceIndex = all.findIndex((p) => p.id === pageId);
+      if (sourceIndex < 0) return;
+      const source = all[sourceIndex];
+      const idSet = new Set(ids);
+      const moving = source.strokes.filter((s) => idSet.has(s.id));
+      if (moving.length === 0) return;
+      const b = strokesBounds(moving);
+
+      // Pages are stacked at a fixed pitch, so the target page follows from where the centre of the selection lands.
+      const gapUnits = (GAP * PAGE_WIDTH) / fitWidth(viewportWidthRef.current);
+      const pitch = PAGE_HEIGHT + gapUnits;
+      const centreY = sourceIndex * pitch + (b.minY + b.maxY) / 2 + dy;
+      const targetIndex = Math.min(all.length - 1, Math.max(0, Math.floor((centreY + gapUnits / 2) / pitch)));
+      const target = all[targetIndex];
+      dy -= (targetIndex - sourceIndex) * pitch;
+
+      // Keep the selection on the paper.
+      const clamp = (delta: number, min: number, max: number, size: number) =>
+        max - min >= size ? -min : Math.min(size - max, Math.max(-min, delta));
+      dx = clamp(dx, b.minX, b.maxX, PAGE_WIDTH);
+      dy = clamp(dy, b.minY, b.maxY, PAGE_HEIGHT);
+
+      const moved = moving.map((s) => translateStroke(s, dx, dy));
+      if (target.id === source.id) {
+        const byId = new Map(moved.map((s) => [s.id, s]));
+        onCommit(source.id, source.strokes.map((s) => byId.get(s.id) ?? s));
+      } else {
+        onCommitChanges([
+          { pageId: source.id, strokes: source.strokes.filter((s) => !idSet.has(s.id)) },
+          { pageId: target.id, strokes: [...target.strokes, ...moved] },
+        ]);
+      }
+      setSelection({ pageId: target.id, ids });
+    },
+    [onCommit, onCommitChanges],
+  );
 
   // Ctrl/⌘ + wheel (and trackpad pinch) zooms around the cursor.
   useEffect(() => {
@@ -284,8 +342,11 @@ export function NotebookViewport({
             scale={scale}
             toolRef={toolRef}
             canDelete={pages.length > 1}
+            selectedIds={selection?.pageId === page.id ? selection.ids : null}
             onCommit={onCommit}
             onDelete={onDeletePage}
+            onSelect={setSelection}
+            onMoveSelection={moveSelection}
           />
         ))}
         <button className="add-page" style={{ width: pageWidth }} onClick={onAddPage}>

@@ -19,7 +19,7 @@ export function NotebookPage() {
 
   // Pages read the current tool through a ref so tool changes don't re-render every sheet.
   const toolRef = useRef<ToolSettings>({ tool, ...presets.pen });
-  toolRef.current = tool === 'eraser' ? { tool, ...presets.pen } : { tool, ...presets[tool] };
+  toolRef.current = tool === 'pen' || tool === 'highlighter' ? { tool, ...presets[tool] } : { tool, ...presets.pen };
 
   const changePreset = useCallback((which: 'pen' | 'highlighter', patch: Partial<ToolPresets['pen']>) => {
     setPresets((prev) => {
@@ -86,7 +86,9 @@ export function NotebookPage() {
         paper={editor.notebook.paper}
         toolRef={toolRef}
         onZoomChange={setZoom}
+        lassoActive={tool === 'lasso'}
         onCommit={editor.commitStrokes}
+        onCommitChanges={editor.commitChanges}
         onAddPage={onAddPage}
         onDeletePage={onDeletePage}
       />

@@ -1,6 +1,6 @@
 import { HIGHLIGHTER_COLORS, HIGHLIGHTER_SIZES, PEN_COLORS, PEN_SIZES } from './ink/constants';
 
-export type ToolKind = 'pen' | 'highlighter' | 'eraser';
+export type ToolKind = 'pen' | 'line' | 'highlighter' | 'eraser' | 'lasso';
 
 export interface ToolSettings {
   tool: ToolKind;

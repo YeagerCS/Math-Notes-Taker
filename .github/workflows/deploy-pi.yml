@@ -1,14 +1,8 @@
-name: Deploy to Raspberry Pi
+name: Deploy backend to Raspberry Pi
 
-# Manual only: Actions → "Deploy to Raspberry Pi" → Run workflow.
+# Manual only: Actions → "Deploy backend to Raspberry Pi" → Run workflow.
 on:
   workflow_dispatch:
-    inputs:
-      target:
-        description: What to deploy
-        type: choice
-        options: [all, api, web]
-        default: all
 
 concurrency:
   group: pi-deploy
@@ -17,19 +11,16 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [backend, frontend]
     defaults:
       run:
-        working-directory: ${{ matrix.app }}
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+          cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npm run build
 
@@ -37,27 +28,16 @@ jobs:
     needs: check
     # Self-hosted runner on the Raspberry Pi (builds natively for arm64).
     runs-on: [self-hosted, mathnotes]
-    env:
-      TARGET: ${{ inputs.target }}
     steps:
       - uses: actions/checkout@v4
       - name: Build api image
-        if: env.TARGET == 'all' || env.TARGET == 'api'
         run: docker build -t mathnotes-api:latest backend
-      - name: Build web image
-        if: env.TARGET == 'all' || env.TARGET == 'web'
-        run: docker build -t mathnotes-web:latest frontend
-      - name: Restart containers
-        run: |
-          case "$TARGET" in
-            all) services="api web" ;;
-            *)   services="$TARGET" ;;
-          esac
-          docker compose -p mathnotes -f deploy/docker-compose.yml up -d --no-deps $services
+      - name: Restart container
+        run: docker compose -p mathnotes -f deploy/docker-compose.yml up -d --remove-orphans
       - name: Wait for health
         run: |
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8092/api/health; then exit 0; fi
+            if curl -fsS http://127.0.0.1:3100/api/health; then exit 0; fi
             sleep 2
           done
           docker compose -p mathnotes -f deploy/docker-compose.yml logs --tail 50
